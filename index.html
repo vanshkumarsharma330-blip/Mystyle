@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vansh Kumar Sharma | Official</title>
+    <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        :root { --bg: #050505; --card: #111; --text: #fff; --accent: #FF3B30; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; overflow-x: hidden; }
+        h1, h2, h3 { font-family: 'Archivo Black', sans-serif; text-transform: uppercase; }
+        
+        /* NAV */
+        nav { padding: 1.5rem 2rem; display: flex; justify-content: space-between; align-items: center; background: rgba(5,5,5,0.95); position: fixed; width: 100%; top: 0; z-index: 1000; }
+        .logo { font-size: 1.5rem; font-weight: 900; letter-spacing: -1px; }
+        
+        /* THE SECRET DOT */
+        .logo span { color: var(--accent); cursor: pointer; user-select: none; padding: 10px; }
+        
+        .hero { height: 60vh; display: flex; flex-direction: column; justify-content: center; padding: 0 10%; margin-top: 60px; }
+        .hero h1 { font-size: 3.5rem; line-height: 1; color: var(--text); }
+        .hero span { color: var(--accent); }
+
+        /* ADMIN PANEL (Hidden by Default) */
+        #admin-modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.95); z-index: 2000; padding: 2rem; overflow-y: auto;
+        }
+        .panel-content { max-width: 500px; margin: 0 auto; background: #1a1a1a; padding: 2rem; border-radius: 15px; border: 1px solid #333; }
+        .panel-content h2 { color: var(--accent); margin-bottom: 1rem; }
+        
+        label { display: block; margin-top: 10px; color: #888; font-size: 0.8rem; }
+        input, textarea { width: 100%; padding: 12px; background: #000; border: 1px solid #333; color: #fff; border-radius: 5px; margin-top: 5px; }
+        
+        .btn-group { display: flex; gap: 10px; margin-top: 20px; }
+        .btn { flex: 1; padding: 12px; border: none; font-weight: bold; cursor: pointer; border-radius: 5px; }
+        .btn-publish { background: var(--accent); color: white; }
+        .btn-close { background: #333; color: white; }
+
+        /* FEED GRID */
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; padding: 2rem 10%; padding-bottom: 6rem; }
+        .card { background: var(--card); border: 1px solid #222; padding: 1.5rem; border-radius: 12px; position: relative; }
+        .card img { width: 100%; height: 200px; object-fit: cover; border-radius: 8px; margin-bottom: 1rem; display: none; }
+        .card img[src] { display: block; } 
+        .card h3 { color: var(--accent); font-size: 1.4rem; margin-bottom: 0.5rem; }
+        .card p { color: #bbb; line-height: 1.5; font-size: 0.9rem; }
+        .date { font-size: 0.7rem; color: #555; margin-bottom: 10px; display: block; }
+
+        /* GHOST DELETE BUTTON (Invisible to the world) */
+        .delete-btn {
+            display: none; /* HIDDEN BY DEFAULT */
+            color: #ff0000;
+            font-size: 0.7rem;
+            font-weight: bold;
+            margin-top: 15px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-top: 1px solid #333;
+            padding-top: 10px;
+        }
+        
+        /* ONLY visible when Admin Mode is ON */
+        body.admin-mode .delete-btn { display: block; } 
+    </style>
+</head>
+<body>
+
+    <nav>
+        <div class="logo">VANSH<span id="secret-dot">.</span></div>
+    </nav>
+
+    <div id="admin-modal">
+        <div class="panel-content">
+            <h2>New Post</h2>
+            <label>Title</label>
+            <input type="text" id="p-title" placeholder="e.g., Gaming Update">
+            <label>Image Link (Optional)</label>
+            <input type="text" id="p-img" placeholder="https://...">
+            <label>Content</label>
+            <textarea id="p-text" rows="5" placeholder="Write something..."></textarea>
+            <div class="btn-group">
+                <button class="btn btn-close" onclick="closeAdmin()">Close</button>
+                <button class="btn btn-publish" onclick="publishPost()">PUBLISH</button>
+            </div>
+        </div>
+    </div>
+
+    <section class="hero">
+        <h1>OFFICIAL<br><span>FEED</span>.</h1>
+    </section>
+
+    <div class="grid" id="feed"></div>
+
+    <script>
+        // ==========================================
+        // 🔒 CHANGE THIS PASSWORD BEFORE UPLOADING!
+        const PASSWORD = "vansh"; 
+        // ==========================================
+
+        let taps = 0;
+        const secretDot = document.getElementById('secret-dot');
+        const modal = document.getElementById('admin-modal');
+        const feed = document.getElementById('feed');
+
+        // --- AUTHENTICATION ---
+        secretDot.addEventListener('click', () => {
+            taps++;
+            if (taps === 3) {
+                taps = 0;
+                let input = prompt("Enter Owner Password:");
+                
+                if (input === PASSWORD) {
+                    // SUCCESS: Unlock Panel AND Reveal Delete Buttons
+                    modal.style.display = 'block';
+                    document.body.classList.add('admin-mode'); 
+                    alert("Admin Mode: UNLOCKED. You can now delete posts.");
+                } else {
+                    alert("ACCESS DENIED.");
+                }
+            }
+        });
+
+        function closeAdmin() { modal.style.display = 'none'; }
+
+        // --- PUBLISH ---
+        function publishPost() {
+            let title = document.getElementById('p-title').value;
+            let img = document.getElementById('p-img').value;
+            let text = document.getElementById('p-text').value;
+            let date = new Date().toLocaleDateString();
+
+            if(!title || !text) { alert("Write something first!"); return; }
+
+            let post = { id: Date.now(), title: title, img: img, text: text, date: date };
+            saveToMemory(post);
+            renderPost(post);
+            closeAdmin();
+            
+            document.getElementById('p-title').value = "";
+            document.getElementById('p-img').value = "";
+            document.getElementById('p-text').value = "";
+        }
+
+        // --- DELETE (Only works if Admin Mode is active) ---
+        function deletePost(id) {
+            if(confirm("Permanently delete this post?")) {
+                let posts = JSON.parse(localStorage.getItem('vansh_posts')) || [];
+                posts = posts.filter(post => post.id !== id);
+                localStorage.setItem('vansh_posts', JSON.stringify(posts));
+                document.getElementById(id).remove();
+            }
+        }
+
+        // --- LOAD ---
+        function saveToMemory(post) {
+            let posts = JSON.parse(localStorage.getItem('vansh_posts')) || [];
+            posts.unshift(post);
+            localStorage.setItem('vansh_posts', JSON.stringify(posts));
+        }
+
+        function loadPosts() {
+            let posts = JSON.parse(localStorage.getItem('vansh_posts')) || [];
+            if(posts.length === 0) {
+                feed.innerHTML = `<div class="card"><h3>WELCOME</h3><p>Tap the red dot 3 times to login.</p></div>`;
+            } else {
+                posts.forEach(post => renderPost(post));
+            }
+        }
+
+        function renderPost(post) {
+            if(feed.innerHTML.includes("WELCOME")) feed.innerHTML = "";
+            
+            let html = `
+                <div class="card" id="${post.id}">
+                    <span class="date">${post.date}</span>
+                    <img src="${post.img}" onerror="this.style.display='none'">
+                    <h3>${post.title}</h3>
+                    <p>${post.text}</p>
+                    <div class="delete-btn" onclick="deletePost(${post.id})">DELETE POST</div>
+                </div>`;
+            feed.insertAdjacentHTML('afterbegin', html);
+        }
+
+        loadPosts();
+    </script>
+</body>
+</html>
